@@ -1,39 +1,51 @@
-import "./App.css";
-import Player from "./components/Player";
-import Header from "./components/Header";
-import { useEffect, useState } from "react";
-
+import React, { useEffect, useState } from "react";
+import Main from "./components/Main";
+import { Outlet, Route, Routes } from "react-router";
+import PlayerInfo from "./components/PlayerInfo";
+import MainHeader from "./components/MainHeader";
+import About from "./components/About";
+import NotFound from "./components/NotFound";
+import Contents from "./components/Contents";
+import Content from "./components/Content";
 export default function App() {
-  const [players, setPlayers] = useState([]);
-  const [changed, setChanged] = useState(false);
+  const [langs, setLangs] = useState({});
+  const [titles, setTitles] = useState();
+  useEffect(() => {
+    fetch("data/ProgLangs.json")
+      .then((e) => e.json())
+      .then((res) => setLangs(res));
+  }, []);
 
   useEffect(() => {
-    fetch("data/data.json")
-      .then((res) => res.json())
-      .then((res) => {
-        // console.log(res.players);
-        setPlayers(res.players);
-      });
-    console.log("Rending inside UseEffec");
-  }, [changed]);
+    setTitles(Object.keys(langs));
+  }, [langs]);
 
-  function btnClicked() {
-    setPlayers([...players]);
-  }
-
-  console.log("rending App component");
+  //titles = ["Html","Css","JavaScript","React"]
   return (
-    <div className="scoreboard">
-      <button onClick={btnClicked}>Click Me</button>
-      <button onClick={() => setChanged(!changed)}>setChanged</button>
-      <Header title="Scoreboard" totalPlayers={players.length} />
-      {players.map((player) => (
-        <Player
-          name={player.name}
-          score={player.score}
-          key={player.id.toString()}
-        />
-      ))}
-    </div>
+    <>
+      <MainHeader data={langs} />
+      <Routes>
+        {titles &&
+          titles.map((title, i) => (
+            <Route
+              key={i}
+              path={`${title}`}
+              element={<Contents data={Object.keys(langs[`${title}`])} />}
+            >
+              {Object.keys(langs[`${title}`]).map((innerTitle, i) => {
+                return (
+                  <Route
+                    path={`${innerTitle}`}
+                    element={
+                      <Content data={langs[`${title}`][`${innerTitle}`]} />
+                    }
+                  />
+                );
+              })}
+            </Route>
+          ))}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 }
